@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        h1 {
+            background-color:#4CAF50;
+            color: white;
+            padding: 30px;
+            position: relative;
+            top: -3vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 10px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        textarea, input {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+            position: relative;
+            left: -26vh;
+        }
+        button:hover {
+            background-color: #4CAF50;
+        }
+        #results {
+            margin-top: 20px;
+            text-align: left;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #e7f5e8;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        h3{
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Resume Checker</h1>
+    <div class="container">
+        <h3>Paste Resume Text</h3>
+        <textarea id="resumeText" rows="5" placeholder="Paste resume text here..."></textarea>
+        <h3>Upload a PDF</h3>
+        <input type="file" id="pdfUpload" accept=".pdf">
+        <button onclick="classifySkills()">Classify Skills</button>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function classifySkills() {
+            const resumeText = document.getElementById("resumeText").value.trim();
+            const fileInput = document.getElementById("pdfUpload").files[0];
+
+            let formData = new FormData();
+
+            if (fileInput) {
+                formData.append("resume", fileInput);
+            } else if (resumeText.length > 0) {
+                formData.append("resume_text", resumeText);
+            } else {
+                alert("Please enter text or upload a PDF.");
+                return;
+            }
+
+            fetch("/classify", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById("results");
+                resultsDiv.innerHTML = "<h3>Classified Skills</h3><ul>";
+
+                for (const [category, skills] of Object.entries(data.skills)) {
+                    if (skills.length > 0) {
+                        resultsDiv.innerHTML += `<li><strong>${category}:</strong> ${skills.join(', ')}</li>`;
+                    }
+                }
+
+                resultsDiv.innerHTML += "</ul>";
+                if (resultsDiv.innerHTML === "<h3>Classified Skills</h3><ul></ul>") {
+                    resultsDiv.innerHTML = "<p>No relevant skills found.</p>";
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+</body>
+</html>
